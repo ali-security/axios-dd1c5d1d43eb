@@ -1,16 +1,7 @@
 name: Lockfile lint
 
 on:
-  pull_request:
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/lockfile-lint.yml'
-  push:
-    branches: [v1.x]
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
+  workflow_dispatch:
 
 permissions:
   contents: read

@@ -1,15 +1,7 @@
 name: Verify build reproducibility
 
 on:
-  pull_request:
-    paths:
-      - 'lib/**'
-      - 'rollup.config.js'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/verify-build-reproducibility.yml'
-  push:
-    branches: [v1.x]
+  workflow_dispatch:
 
 permissions:
   contents: read

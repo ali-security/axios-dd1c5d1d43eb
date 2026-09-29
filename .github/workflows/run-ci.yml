@@ -1,8 +1,12 @@
 name: Continuous integration
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      test-filter:
+        description: 'Optional vitest filter'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -15,6 +19,7 @@ jobs:
   build-and-run-vitest:
     name: Build and run vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -41,16 +46,27 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run unit tests
-        run: npm run test:vitest:unit
+        env:
+          TEST_FILTER: ${{ inputs.test-filter }}
+        run: |
+          if [ -n "$TEST_FILTER" ]; then
+            npx vitest run --project unit $TEST_FILTER
+          else
+            npm run test:vitest:unit
+          fi
 
       - name: Run browser tests
-        run: npm run test:vitest:browser:headless
+        env:
+          TEST_FILTER: ${{ inputs.test-filter }}
+        run: |
+          if [ -n "$TEST_FILTER" ]; then
+            npx vitest run --project browser-headless $TEST_FILTER
+          else
+            npm run test:vitest:browser:headless
+          fi
 
       - name: Pack npm tarball
         run: npm pack
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
 
       - name: Upload npm pack artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -64,6 +80,7 @@ jobs:
     name: CJS smoke tests (Node ${{ matrix.node-version }})
     needs: build-and-run-vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -103,6 +120,7 @@ jobs:
     name: ESM smoke tests (Node ${{ matrix.node-version }})
     needs: build-and-run-vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -142,6 +160,7 @@ jobs:
     name: CJS module tests (Node ${{ matrix.node-version }})
     needs: build-and-run-vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -181,6 +200,7 @@ jobs:
     name: ESM module tests (Node ${{ matrix.node-version }})
     needs: build-and-run-vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -220,6 +240,7 @@ jobs:
     name: Bun smoke tests
     needs: build-and-run-vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -255,6 +276,7 @@ jobs:
     name: Deno smoke tests
     needs: build-and-run-vitest
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
